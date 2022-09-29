@@ -8,6 +8,7 @@ import "solidity-coverage"
 import "hardhat-deploy"
 import "solidity-coverage"
 import { HardhatUserConfig } from "hardhat/types"
+import "@nomicfoundation/hardhat-toolbox"
 
 const RINKEBY_RPC_URL = process.env.RINKEBY_RPC_URL || "https://eth-rinkeby"
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "0xkey"
