@@ -10,7 +10,7 @@ import "solidity-coverage"
 import { HardhatUserConfig } from "hardhat/types"
 import "@nomicfoundation/hardhat-toolbox"
 
-const RINKEBY_RPC_URL = process.env.RINKEBY_RPC_URL || "https://eth-rinkeby"
+const GOERLI_RPC_URL = process.env.GOERLI_RPC_URL || "https://eth-rinkeby"
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "0xkey"
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "key"
@@ -19,7 +19,13 @@ const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY || "key"
 
 /** @type import('hardhat/config').HardhatUserConfig */
 const config: HardhatUserConfig = {
-    solidity: "0.8.9",
+    solidity: {
+        compilers: [
+            {
+                version: "0.8.9",
+            },
+        ],
+    },
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
@@ -29,9 +35,9 @@ const config: HardhatUserConfig = {
             chainId: 31337,
             url: "http://127.0.0.1:8545/",
         },
-        rinkeby: {
-            chainId: 4,
-            url: RINKEBY_RPC_URL,
+        goerli: {
+            chainId: 5,
+            url: GOERLI_RPC_URL,
             accounts: [PRIVATE_KEY],
         },
     },
