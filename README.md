@@ -9,5 +9,6 @@ npx hardhat help
 npx hardhat test
 GAS_REPORT=true npx hardhat test
 npx hardhat node
-npx hardhat run scripts/deploy.ts
+npx hardhat deploy --network goerli --tags 00-deploye-testContract
+npx hardhat run scripts/testScript.ts --network localhost
 ```
