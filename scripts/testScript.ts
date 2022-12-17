@@ -1,6 +1,6 @@
 import { ethers } from "hardhat"
 
-// Run script with NPX Hardhat run scripts/testScript.ts
+// Run script with npx Hardhat run scripts/testScript.ts
 
 async function main() {
     const currentTimestampInSeconds = Math.round(Date.now() / 1000)
