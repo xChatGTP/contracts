@@ -1,7 +1,5 @@
 import { ethers } from "hardhat"
 
-// Run script with npx Hardhat run scripts/testScript.ts
-
 async function main() {
     const currentTimestampInSeconds = Math.round(Date.now() / 1000)
     const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60
