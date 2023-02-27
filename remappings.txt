@@ -1,0 +1,15 @@
+ds-test/=lib/forge-std/lib/ds-test/src/
+erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/
+forge-std/=lib/forge-std/src/
+oz/=lib/openzeppelin-contracts/contracts/
+oz-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
+solmate/=lib/solmate/src/
+uni-periphery=lib/v3-periphery/contracts
+uni-core=lib/v3-core/contracts
+axelar-gmp=lib/axelar-gmp-sdk-solidity/contracts
+
+@openzeppelin=lib/openzeppelin-contracts/
+@openzeppelin/contracts-upgradeable=lib/openzeppelin-contracts-upgradeable/
+@uniswap/v3-core=lib/v3-core
+@uniswap/v3-periphery=lib/v3-periphery
+@axelar-network/axelar-gmp-sdk-solidity=lib/axelar-gmp-sdk-solidity
