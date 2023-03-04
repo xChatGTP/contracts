@@ -24,8 +24,6 @@ contract HPolygon is HandlerBase {
         uint256 amount
     );
 
-		constructor(address _nativeTokenAddress) HandlerBase(_nativeTokenAddress) {}
-
     function getContractName() public pure override returns (string memory) {
         return "HPolygon";
     }

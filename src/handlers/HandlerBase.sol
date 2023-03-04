@@ -18,11 +18,7 @@ abstract contract HandlerBase is Storage, Config {
     IAxelarGasService public gasService;
     IAxelarGateway public gateway;
 
-    address public immutable NATIVE_TOKEN_ADDRESS; // 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-
-    constructor(address _nativeTokenAddress) {
-        NATIVE_TOKEN_ADDRESS = _nativeTokenAddress;
-    }
+    address public immutable NATIVE_TOKEN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     function postProcess() external payable virtual {
         revert('Invalid post process');

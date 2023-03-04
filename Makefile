@@ -33,6 +33,8 @@ bind :; forge bind
 
 bind-op :; forge bind --via-ir --optimize
 
+test-anvil :; forge test --via-ir --optimize --rpc-url http://localhost:8545 -vvvv
+
 # Test on Goerli fork
 test :; forge test --via-ir --optimize --fork-url ${MUMBAI_RPC_URL} -vvvv
 
@@ -52,11 +54,17 @@ anvil :; anvil -m 'test test test test test test test test test test test junk'
 
 # deploy with verification # call like `make deploy-goerli contract=Token`
 # use the "@" to hide the command from your shell
-deploy-goerli :; @forge script script/${contract}.s.sol:Deploy${contract} --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_API_KEY}  -vvvv
+deploy-goerli :; @forge script script/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${GOERLI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
+
+deploy-handlers-goerli :; @forge script script/handlers/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${GOERLI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
+
+deploy-handlers-mumbai :; @forge script script/handlers/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${MUMBAI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
 
 # This is the private key of account from the mnemonic from the "make anvil" command
 # `make deploy-anvil contract=VenusHedger`
-deploy-anvil :; @forge script script/${contract}.s.sol:Deploy${contract} --rpc-url http://localhost:8545  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast 
+deploy-anvil :; @forge script script/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url http://localhost:8545  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast 
+
+deploy-handlers-anvil :; @forge script script/handlers/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast 
 
 #
 # ABI

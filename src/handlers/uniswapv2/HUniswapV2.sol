@@ -14,8 +14,6 @@ contract HUniswapV2 is HandlerBase {
     // prettier-ignore
     address public constant UNISWAPV2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
-    constructor (address _nativeTokenAddress) HandlerBase(_nativeTokenAddress) {}
-
     function getContractName() public pure override returns (string memory) {
         return 'HUniswapV2';
     }

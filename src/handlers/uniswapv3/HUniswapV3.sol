@@ -14,15 +14,16 @@ contract HUniswapV3 is HandlerBase {
     using BytesLib for bytes;
 
     // prettier-ignore
-    ISwapRouter public constant ROUTER = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
+    ISwapRouter public immutable ROUTER;
     // prettier-ignore
     IWrappedNativeToken public immutable wrappedNativeToken;
 
     uint256 private constant PATH_SIZE = 43; // address + address + uint24
     uint256 private constant ADDRESS_SIZE = 20;
 
-    constructor(address wrappedNativeToken_, address _nativeTokenAddress) HandlerBase(_nativeTokenAddress) {
-        wrappedNativeToken = IWrappedNativeToken(wrappedNativeToken_);
+    constructor(address _wrappedNativeToken, address _router) {
+        wrappedNativeToken = IWrappedNativeToken(_wrappedNativeToken);
+        ROUTER = ISwapRouter(_router);
     }
 
     function getContractName() public pure override returns (string memory) {

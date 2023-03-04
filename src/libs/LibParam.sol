@@ -3,8 +3,8 @@
 pragma solidity >=0.8.0;
 
 library LibParam {
-    bytes32 private constant CHAIN_MASK =
-        0x1000000000000000000000000000000000000000000000000000000000000000;
+    // bytes32 private constant CHAIN_MASK =
+    //     0x1000000000000000000000000000000000000000000000000000000000000000;
     bytes32 private constant STATIC_MASK =
         0x0100000000000000000000000000000000000000000000000000000000000000;
     bytes32 private constant PARAMS_MASK =
@@ -27,10 +27,10 @@ library LibParam {
         return getReturnNum(conf) != 0;
     }
 
-    function getChainNum(bytes32 conf) internal pure returns (uint256 num) {
-        bytes32 temp = (conf & CHAIN_MASK) >> CHAIN_NUM_OFFSET;
-        num = uint256(temp);
-    }
+    // function getChainNum(bytes32 conf) internal pure returns (uint256 num) {
+    //     bytes32 temp = (conf & CHAIN_MASK) >> CHAIN_NUM_OFFSET;
+    //     num = uint256(temp);
+    // }
 
     function getReturnNum(bytes32 conf) internal pure returns (uint256 num) {
         bytes32 temp = (conf & RETURN_NUM_MASK) >> RETURN_NUM_OFFSET;

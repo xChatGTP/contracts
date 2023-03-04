@@ -10,7 +10,7 @@ contract HWrappedNativeToken is HandlerBase {
     // prettier-ignore
     address public immutable wrappedNativeToken;
 
-    constructor(address wrappedNativeToken_, address _nativeTokenAddress) HandlerBase(_nativeTokenAddress) {
+    constructor(address wrappedNativeToken_) {
         wrappedNativeToken = wrappedNativeToken_;
     }
 

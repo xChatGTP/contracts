@@ -9,13 +9,14 @@ import { Ownable } from 'oz/access/Ownable.sol';
 import { SafeERC20, IERC20 } from 'oz/token/ERC20/utils/SafeERC20.sol';
 import { Address } from 'oz/utils/Address.sol';
 import { Strings } from 'oz/utils/Strings.sol';
+import { console } from 'forge-std/console.sol';
 
 import { Config } from './misc/Config.sol';
 import { Storage } from './misc/Storage.sol';
 import { LibStack } from './libs/LibStack.sol';
 import { LibParam } from './libs/LibParam.sol';
 
-contract GTP is AxelarExecutable, Storage, Config, Ownable {
+contract GTP is Storage, Config, Ownable {
     using SafeERC20 for IERC20;
     using Address for address;
     using AddressToString for address;
@@ -57,8 +58,8 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
         address _gasReceiver,
         string memory _nativeTokenSymbol,
         address _nativeTokenAddress
-    ) AxelarExecutable(_gateway) {
-        gasReceiver = IAxelarGasService(_gasReceiver);
+    ) {
+        // gasReceiver = IAxelarGasService(_gasReceiver);
         NATIVE_TOKEN_SYMBOL = _nativeTokenSymbol;
         NATIVE_TOKEN = _nativeTokenAddress;
     }
@@ -75,6 +76,10 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
         bytes32[] calldata configs,
         bytes[] memory datas
     ) external payable {
+        console.log('batchExec');
+        console.log(tos[0]);
+        console.logBytes32(configs[0]);
+        console.logBytes(datas[0]);
         _preProcess(address(0));
         _execs(tos, configs, datas, msg.sender);
         _postProcess();
@@ -97,21 +102,21 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
     /**
      * @notice Executed by Axelar on target chain (from source chain).
      */
-    function _executeWithToken(
-        string calldata,
-        string calldata,
-        bytes calldata payload,
-        string calldata tokenSymbol,
-        uint256 amount
-    ) internal override {
-        address user;
-        address[] memory tos;
-        bytes32[] memory configs;
-        bytes[] memory datas;
+    // function _executeWithToken(
+    //     string calldata,
+    //     string calldata,
+    //     bytes calldata payload,
+    //     string calldata tokenSymbol,
+    //     uint256 amount
+    // ) internal override {
+    //     address user;
+    //     address[] memory tos;
+    //     bytes32[] memory configs;
+    //     bytes[] memory datas;
         
-        (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
-        _chainedExecs(user, tos, configs, datas);
-    }
+    //     (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
+    //     _chainedExecs(user, tos, configs, datas);
+    // }
 
     function _chainedExecs(
         address user,
@@ -136,7 +141,8 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
         bytes[] memory datas,
         address user
     ) internal {
-        bytes32[256] memory localStack;
+        // bytes32[256] memory localStack;
+        bytes32[8] memory localStack;
         uint256 index;
         uint256 counter;
 
@@ -144,68 +150,63 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
         require(tos.length == configs.length, 'Tos and configs length inconsistent');
 
         for (uint256 i = 0; i < tos.length;) {
+            console.log(i);
             address to = tos[i];
             bytes32 config = configs[i];
             bytes memory data = datas[i];
 
-            // If not the last execution, check if the next execution is on the same chain
-            uint256 chainNum = config.getChainNum();
-            uint256 nextChainNum = configs[i + 1].getChainNum();
+            // Pass the rest of the execution data  to the next chain.
+            // Include the bridging execution (index i), which is needed for bridging the token.
+            // {
+            //     address[] memory _tos = new address[](tos.length - i);
+            //     bytes32[] memory _configs = new bytes32[](tos.length - i);
+            //     bytes[] memory _datas = new bytes[](tos.length - i);
 
-            if (chainNum != nextChainNum) {
-                // Pass the rest of the execution data  to the next chain.
-                // Include the bridging execution (index i), which is needed for bridging the token.
-                {
-                    address[] memory _tos = new address[](tos.length - i);
-                    bytes32[] memory _configs = new bytes32[](tos.length - i);
-                    bytes[] memory _datas = new bytes[](tos.length - i);
+            //     // skip the i-th tx since it (must) indicates bridging
+            //     for (uint256 j = i + 1;  j < tos.length;) {
+            //         _tos[tos.length - j] = tos[j];
+            //         _configs[tos.length - j] = configs[j];
+            //         _datas[tos.length - j] = datas[j];
+            //         unchecked {
+            //             ++j;
+            //         }
+            //     }
 
-                    // skip the i-th tx since it (must) indicates bridging
-                    for (uint256 j = i + 1;  j < tos.length;) {
-                        _tos[tos.length - j] = tos[j];
-                        _configs[tos.length - j] = configs[j];
-                        _datas[tos.length - j] = datas[j];
-                        unchecked {
-                            ++j;
-                        }
-                    }
+            //     _execsTransferChain(
+            //         _tos,
+            //         _configs,
+            //         _datas,
+            //         user,
+            //         chainNum,
+            //         nextChainNum
+            //     );
+            // }
 
-                    _execsTransferChain(
-                        _tos,
-                        _configs,
-                        _datas,
-                        user,
-                        chainNum,
-                        nextChainNum
-                    );
-                }
-            } else {
-                // Check if the data contains dynamic parameter
-                if (!config.isStatic()) {
-                    // If so, trim the exectution data base on the configuration and stack content
-                    _trim(data, config, localStack, index);
-                }
-                // Emit the execution log before call
-                bytes4 selector = _getSelector(data);
-                emit LogBegin(to, selector, data);
+            // Check if the data contains dynamic parameter
+            if (!config.isStatic()) {
+                // If so, trim the exectution data base on the configuration and stack content
+                _trim(data, config, localStack, index);
+            }
+            // Emit the execution log before call
+            bytes4 selector = _getSelector(data);
+            emit LogBegin(to, selector, data);
 
-                // Check if the output will be referenced afterwards
-                bytes memory result = _exec(to, data, counter);
-                counter++;
+            // Check if the output will be referenced afterwards
+            bytes memory result = _exec(to, data, counter);
+            counter++;
 
-                // Emit the execution log after call
-                emit LogEnd(to, selector, result);
+            // Emit the execution log after call
+            emit LogEnd(to, selector, result);
 
-                if (config.isReferenced()) {
-                    // If so, parse the output and place it into local stack
-                    uint256 num = config.getReturnNum();
-                    uint256 newIndex = _parse(localStack, result, index);
-                    require(
-                        newIndex == index + num,
-                        'Return num and parsed return num not matched'
-                    );
-                    index = newIndex;
-                }
+            if (config.isReferenced()) {
+                // If so, parse the output and place it into local stack
+                uint256 num = config.getReturnNum();
+                uint256 newIndex = _parse(localStack, result, index);
+                require(
+                    newIndex == index + num,
+                    'Return num and parsed return num not matched'
+                );
+                index = newIndex;
             }
 
             // Setup the process to be triggered in the post-process phase
@@ -217,44 +218,44 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
         }
     }
 
-    function _execsTransferChain(
-        address[] memory tos,
-        bytes32[] memory configs,
-        bytes[] memory datas,
-        address user,
-        uint256 curChainNum,
-        uint256 nextChainNum
-    ) internal {
-        require(tos.length > 1, 'Invalid length in chain transfer');
-        bytes memory payload = abi.encode(user, tos, configs, datas);
+    // function _execsTransferChain(
+    //     address[] memory tos,
+    //     bytes32[] memory configs,
+    //     bytes[] memory datas,
+    //     address user,
+    //     uint256 curChainNum,
+    //     uint256 nextChainNum
+    // ) internal {
+    //     require(tos.length > 1, 'Invalid length in chain transfer');
+    //     bytes memory payload = abi.encode(user, tos, configs, datas);
 
-        SiblingChain memory nextChain = siblingChains[nextChainNum];
-        string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
-        string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
-        uint256 amount = 0.025 ether;
+    //     SiblingChain memory nextChain = siblingChains[nextChainNum];
+    //     string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
+    //     string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
+    //     uint256 amount = 0.025 ether;
 
-        // AVAX (Avalanche)
-        // ETH (Ethereum)
-        // FTM (Fantom)
-        // GLMR (Moonbeam)
-        // MATIC (Polygon)
+    //     // AVAX (Avalanche)
+    //     // ETH (Ethereum)
+    //     // FTM (Fantom)
+    //     // GLMR (Moonbeam)
+    //     // MATIC (Polygon)
 
-        // address tokenAddress = gateway.tokenAddresses(symbol);
+    //     // address tokenAddress = gateway.tokenAddresses(symbol);
 
-        // Pay gas
-        gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
-            address(this), // sender
-            dstChain,
-            dstContractAddr,
-            payload,
-            NATIVE_TOKEN_SYMBOL,
-            amount,
-            msg.sender
-        );
+    //     // Pay gas
+    //     gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
+    //         address(this), // sender
+    //         dstChain,
+    //         dstContractAddr,
+    //         payload,
+    //         NATIVE_TOKEN_SYMBOL,
+    //         amount,
+    //         msg.sender
+    //     );
 
-        // Initiate GMP
-        gateway.callContractWithToken(dstChain, dstContractAddr, payload, NATIVE_TOKEN_SYMBOL, amount);
-    }
+    //     // Initiate GMP
+    //     gateway.callContractWithToken(dstChain, dstContractAddr, payload, NATIVE_TOKEN_SYMBOL, amount);
+    // }
 
     /**
      * @notice Trimming the execution data.
@@ -266,7 +267,7 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
     function _trim(
         bytes memory data,
         bytes32 config,
-        bytes32[256] memory localStack,
+        bytes32[8] memory localStack, // bytes32[256] memory localStack,
         uint256 index
     ) internal pure {
         // Fetch the parameter configuration from config
@@ -304,7 +305,7 @@ contract GTP is AxelarExecutable, Storage, Config, Ownable {
      * @param index The current tail.
      */
     function _parse(
-        bytes32[256] memory localStack,
+        bytes32[8] memory localStack, // bytes32[256] memory localStack,
         bytes memory ret,
         uint256 index
     ) internal pure returns (uint256 newIndex) {
