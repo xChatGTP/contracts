@@ -5,7 +5,6 @@ pragma solidity ^0.8.15;
 import { AxelarExecutable } from 'axelar-gmp/executable/AxelarExecutable.sol';
 import { IAxelarGasService } from 'axelar-gmp/interfaces/IAxelarGasService.sol';
 import { StringToAddress, AddressToString } from 'axelar-gmp/utils/AddressString.sol';
-import { Ownable } from 'oz/access/Ownable.sol';
 import { SafeERC20, IERC20 } from 'oz/token/ERC20/utils/SafeERC20.sol';
 import { Address } from 'oz/utils/Address.sol';
 import { Strings } from 'oz/utils/Strings.sol';
@@ -15,8 +14,9 @@ import { Config } from './misc/Config.sol';
 import { Storage } from './misc/Storage.sol';
 import { LibStack } from './libs/LibStack.sol';
 import { LibParam } from './libs/LibParam.sol';
+import { ISwapRouter } from './handlers/uniswapv3/ISwapRouter.sol';
 
-contract GTP is Storage, Config, Ownable {
+contract GTP is Storage, Config {
     using SafeERC20 for IERC20;
     using Address for address;
     using AddressToString for address;
@@ -44,6 +44,11 @@ contract GTP is Storage, Config, Ownable {
 		address gtp; // GTP contract deployed on this chain
 	}
 
+    /// @dev First two variables must be maintained in its slots for delegatecall
+    address private immutable NATIVE_TOKEN_ADDRESS; // 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+
+    ISwapRouter private immutable ROUTER;
+
 	// Mapping from our internal chain id to official chain
 	mapping (uint256 => SiblingChain) public siblingChains;
 
@@ -51,17 +56,29 @@ contract GTP is Storage, Config, Ownable {
 
     string private NATIVE_TOKEN_SYMBOL;
 
-    address private immutable NATIVE_TOKEN; // 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+    address public owner;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, 'Only owner');
+        _;
+    }
 
     constructor(
         address _gateway,
         address _gasReceiver,
         string memory _nativeTokenSymbol,
-        address _nativeTokenAddress
+        address _nativeTokenAddress,
+        address _router // Uniswap Router V3
     ) {
         // gasReceiver = IAxelarGasService(_gasReceiver);
+        NATIVE_TOKEN_ADDRESS = _nativeTokenAddress;
         NATIVE_TOKEN_SYMBOL = _nativeTokenSymbol;
-        NATIVE_TOKEN = _nativeTokenAddress;
+        ROUTER = ISwapRouter(_router);
+        owner = msg.sender;
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
+        owner = newOwner;
     }
 
     /**
@@ -76,11 +93,7 @@ contract GTP is Storage, Config, Ownable {
         bytes32[] calldata configs,
         bytes[] memory datas
     ) external payable {
-        console.log('batchExec');
-        console.log(tos[0]);
-        console.logBytes32(configs[0]);
-        console.logBytes(datas[0]);
-        _preProcess(address(0));
+        _preProcess(msg.sender);
         _execs(tos, configs, datas, msg.sender);
         _postProcess();
     }
@@ -343,7 +356,25 @@ contract GTP is Storage, Config, Ownable {
         uint256 counter_
     ) internal returns (bytes memory result) {
         bool success;
-        (success, result) = to_.call{value: msg.value}(data_);
+        assembly {
+            success := delegatecall(
+                sub(gas(), 5000),
+                to_,
+                add(data_, 0x20),
+                mload(data_),
+                0,
+                0
+            )
+            let size := returndatasize()
+
+            result := mload(0x40)
+            mstore(
+                0x40,
+                add(result, and(add(add(size, 0x20), 0x1f), not(0x1f)))
+            )
+            mstore(result, size)
+            returndatacopy(add(result, 0x20), 0, size)
+        }
 
         if (!success) {
             if (result.length < 68) revert('_exec');

@@ -3,6 +3,7 @@
 pragma solidity ^0.8.15;
 
 import 'oz/token/ERC20/utils/SafeERC20.sol';
+import { console } from 'forge-std/console.sol';
 
 import '../HandlerBase.sol';
 import '../wrappednativetoken/IWrappedNativeToken.sol';
@@ -12,19 +13,6 @@ import '../../libs/BytesLib.sol';
 contract HUniswapV3 is HandlerBase {
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
-
-    // prettier-ignore
-    ISwapRouter public immutable ROUTER;
-    // prettier-ignore
-    IWrappedNativeToken public immutable wrappedNativeToken;
-
-    uint256 private constant PATH_SIZE = 43; // address + address + uint24
-    uint256 private constant ADDRESS_SIZE = 20;
-
-    constructor(address _wrappedNativeToken, address _router) {
-        wrappedNativeToken = IWrappedNativeToken(_wrappedNativeToken);
-        ROUTER = ISwapRouter(_router);
-    }
 
     function getContractName() public pure override returns (string memory) {
         return 'HUniswapV3';
@@ -39,7 +27,7 @@ contract HUniswapV3 is HandlerBase {
     ) external payable returns (uint256 amountOut) {
         // Build params for router call
         ISwapRouter.ExactInputSingleParams memory params;
-        params.tokenIn = address(wrappedNativeToken);
+        params.tokenIn = address(NATIVE_TOKEN_ADDRESS);
         params.tokenOut = tokenOut;
         params.fee = fee;
         params.amountIn = _getBalance(address(0), amountIn);
@@ -61,7 +49,7 @@ contract HUniswapV3 is HandlerBase {
         // Build params for router call
         ISwapRouter.ExactInputSingleParams memory params;
         params.tokenIn = tokenIn;
-        params.tokenOut = address(wrappedNativeToken);
+        params.tokenOut = address(NATIVE_TOKEN_ADDRESS);
         params.fee = fee;
         params.amountIn = _getBalance(tokenIn, amountIn);
         params.amountOutMinimum = amountOutMinimum;
@@ -71,7 +59,7 @@ contract HUniswapV3 is HandlerBase {
         _tokenApprove(tokenIn, address(ROUTER), params.amountIn);
         amountOut = _exactInputSingle(0, params);
         _tokenApproveZero(tokenIn, address(ROUTER));
-        wrappedNativeToken.withdraw(amountOut);
+        IWrappedNativeToken(NATIVE_TOKEN_ADDRESS).withdraw(amountOut);
     }
 
     function exactInputSingle(
@@ -108,7 +96,7 @@ contract HUniswapV3 is HandlerBase {
         address tokenOut = _getLastToken(path);
         // Input token must be WETH
         _requireMsg(
-            tokenIn == address(wrappedNativeToken),
+            tokenIn == address(NATIVE_TOKEN_ADDRESS),
             'exactInputFromEther',
             'Input not wrapped native token'
         );
@@ -133,7 +121,7 @@ contract HUniswapV3 is HandlerBase {
         address tokenOut = _getLastToken(path);
         // Output token must be WETH
         _requireMsg(
-            tokenOut == address(wrappedNativeToken),
+            tokenOut == address(NATIVE_TOKEN_ADDRESS),
             'exactInputToEther',
             'Output not wrapped native token'
         );
@@ -147,7 +135,7 @@ contract HUniswapV3 is HandlerBase {
         _tokenApprove(tokenIn, address(ROUTER), params.amountIn);
         amountOut = _exactInput(0, params);
         _tokenApproveZero(tokenIn, address(ROUTER));
-        wrappedNativeToken.withdraw(amountOut);
+        IWrappedNativeToken(NATIVE_TOKEN_ADDRESS).withdraw(amountOut);
     }
 
     function exactInput(
@@ -180,7 +168,7 @@ contract HUniswapV3 is HandlerBase {
     ) external payable returns (uint256 amountIn) {
         // Build params for router call
         ISwapRouter.ExactOutputSingleParams memory params;
-        params.tokenIn = address(wrappedNativeToken);
+        params.tokenIn = address(NATIVE_TOKEN_ADDRESS);
         params.tokenOut = tokenOut;
         params.fee = fee;
         params.amountOut = amountOut;
@@ -204,7 +192,7 @@ contract HUniswapV3 is HandlerBase {
         // Build params for router call
         ISwapRouter.ExactOutputSingleParams memory params;
         params.tokenIn = tokenIn;
-        params.tokenOut = address(wrappedNativeToken);
+        params.tokenOut = address(NATIVE_TOKEN_ADDRESS);
         params.fee = fee;
         params.amountOut = amountOut;
         // if amount == type(uint256).max return balance of Proxy
@@ -215,7 +203,7 @@ contract HUniswapV3 is HandlerBase {
         _tokenApprove(params.tokenIn, address(ROUTER), params.amountInMaximum);
         amountIn = _exactOutputSingle(0, params);
         _tokenApproveZero(params.tokenIn, address(ROUTER));
-        wrappedNativeToken.withdraw(params.amountOut);
+        IWrappedNativeToken(NATIVE_TOKEN_ADDRESS).withdraw(params.amountOut);
     }
 
     function exactOutputSingle(
@@ -254,7 +242,7 @@ contract HUniswapV3 is HandlerBase {
         address tokenOut = _getFirstToken(path);
         // Input token must be WETH
         _requireMsg(
-            tokenIn == address(wrappedNativeToken),
+            tokenIn == address(NATIVE_TOKEN_ADDRESS),
             'exactOutputFromEther',
             'Input not wrapped native token'
         );
@@ -281,7 +269,7 @@ contract HUniswapV3 is HandlerBase {
         address tokenOut = _getFirstToken(path);
         // Out token must be WETH
         _requireMsg(
-            tokenOut == address(wrappedNativeToken),
+            tokenOut == address(NATIVE_TOKEN_ADDRESS),
             'exactOutputToEther',
             'Output not wrapped native token'
         );
@@ -296,7 +284,7 @@ contract HUniswapV3 is HandlerBase {
         _tokenApprove(tokenIn, address(ROUTER), params.amountInMaximum);
         amountIn = _exactOutput(0, params);
         _tokenApproveZero(tokenIn, address(ROUTER));
-        wrappedNativeToken.withdraw(amountOut);
+        IWrappedNativeToken(NATIVE_TOKEN_ADDRESS).withdraw(amountOut);
     }
 
     function exactOutput(
@@ -327,14 +315,18 @@ contract HUniswapV3 is HandlerBase {
     }
 
     function _getLastToken(bytes memory path) internal pure returns (address) {
-        _requireMsg(path.length >= PATH_SIZE, 'General', 'Path size too small');
-        return path.toAddress(path.length - ADDRESS_SIZE);
+        // address + address + uint24
+        _requireMsg(path.length >= 43, 'General', 'Path size too small');
+        return path.toAddress(path.length - 20); // ADDRESS_SIZE = 20
     }
 
     function _exactInputSingle(
         uint256 value,
         ISwapRouter.ExactInputSingleParams memory params
     ) internal returns (uint256) {
+        console.log('Wrapped native', NATIVE_TOKEN_ADDRESS);
+        console.log('Router', address(ROUTER));
+
         params.deadline = block.timestamp;
         params.recipient = address(this);
 

@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import { console } from 'forge-std/console.sol';
+
 import '../libs/LibCache.sol';
 import '../libs/LibStack.sol';
 
@@ -33,6 +35,7 @@ contract Storage {
     }
 
     function _setSender(address _overrideSender) internal isNotInitialized {
+        console.log('Setting sender to', _overrideSender);
         if (_overrideSender != address(0)) {
             cache.setAddress(MSG_SENDER_KEY, _overrideSender);
         } else {

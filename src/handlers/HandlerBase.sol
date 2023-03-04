@@ -2,23 +2,23 @@
 
 pragma solidity >=0.8.0;
 
-import { IAxelarGateway } from 'axelar-gmp/interfaces/IAxelarGateway.sol';
-import { IAxelarGasService } from 'axelar-gmp/interfaces/IAxelarGasService.sol';
 import { SafeERC20, IERC20 } from 'oz/token/ERC20/utils/SafeERC20.sol';
 
 import { Config } from '../misc/Config.sol';
 import { LibStack } from '../libs/LibStack.sol';
 import { Storage } from '../misc/Storage.sol';
+import { ISwapRouter } from './uniswapv3/ISwapRouter.sol';
 
 abstract contract HandlerBase is Storage, Config {
     using SafeERC20 for IERC20;
     using LibStack for bytes32[];
 
-    // for delegatecall slot preservation
-    IAxelarGasService public gasService;
-    IAxelarGateway public gateway;
+    /// @dev Place NATIVE_TOKEN_ADDRESS as the first variable
+    ///      for delegate call storage loading.
+    address public NATIVE_TOKEN_ADDRESS; // = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    address public immutable NATIVE_TOKEN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    /// @dev Placeholder for delegatecall
+    ISwapRouter public ROUTER; // = ISwapRouter(address(0));
 
     function postProcess() external payable virtual {
         revert('Invalid post process');
