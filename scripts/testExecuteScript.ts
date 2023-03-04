@@ -49,7 +49,7 @@ async function main() {
 
         await approveTx.wait(1)
 
-        console.log("success!")
+        console.log("Successfully approved!")
     }
 
     console.log("Attempting try execute...")
