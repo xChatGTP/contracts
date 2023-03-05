@@ -152,14 +152,14 @@ contract HFunds is HandlerBase {
             'token and amount does not match'
         );
         address sender = _getSender();
-        // console.log('Sender', sender);
+        console.log('Sender', sender);
         uint256[] memory amountsInProxy = new uint256[](amounts.length);
 
         for (uint256 i = 0; i < tokens.length; i++) {
-            // console.log('Moving token', tokens[i]);
-            // console.log('Amount', amounts[i]);
-            // console.log('allowance', IERC20(tokens[i]).allowance(sender, address(this)));
-            // console.log('balance', IERC20(tokens[i]).balanceOf(sender));
+            console.log('Moving token', tokens[i]);
+            console.log('Amount', amounts[i]);
+            console.log('allowance', IERC20(tokens[i]).allowance(sender, address(this)));
+            console.log('balance', IERC20(tokens[i]).balanceOf(sender));
             IERC20(tokens[i]).safeTransferFrom(
                 sender,
                 address(this),

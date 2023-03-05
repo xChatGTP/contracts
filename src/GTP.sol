@@ -270,8 +270,17 @@ contract GTP is AxelarExecutable, Storage, Config {
             msg.sender
         );
 
+        console.log("Approving tokens for gateway...", tokenAddress);
+
+        // Approve tokens
+        IERC20(tokenAddress).approve(address(gateway), amountToBridge);
+
+        console.log("Approved tokens for gateway!");
+
         // Initiate GMP
         gateway.callContractWithToken(dstChain, dstContractAddr, payload, NATIVE_TOKEN_SYMBOL, amountToBridge);
+    
+        console.log("called gateway.callContractWithToken");
     }
 
     /**

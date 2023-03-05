@@ -27,3 +27,7 @@ yarn-error.log*
 
 # foundry
 lib/
+
+artifacts/
+deployments/
+typechain-types/
