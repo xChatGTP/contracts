@@ -8,7 +8,7 @@ import { StringToAddress, AddressToString } from 'axelar-gmp/utils/AddressString
 import { SafeERC20, IERC20 } from 'oz/token/ERC20/utils/SafeERC20.sol';
 import { Address } from 'oz/utils/Address.sol';
 import { Strings } from 'oz/utils/Strings.sol';
-import { console } from 'forge-std/console.sol';
+// import { console } from 'forge-std/console.sol';
 
 import { Config } from './misc/Config.sol';
 import { Storage } from './misc/Storage.sol';
@@ -96,8 +96,9 @@ contract GTP is AxelarExecutable, Storage, Config {
         bytes32[] calldata configs,
         bytes[] memory datas
     ) external payable {
+        bytes32[8] memory localStack;
         _preProcess(msg.sender);
-        _execs(tos, configs, datas, msg.sender);
+        _execs(tos, configs, datas, msg.sender, localStack);
         _postProcess();
     }
 
@@ -112,17 +113,22 @@ contract GTP is AxelarExecutable, Storage, Config {
         bytes[] memory datas
     ) external payable {
         require(msg.sender == address(this), 'Does not allow external calls');
-        _execs(tos, configs, datas, msg.sender);
+        bytes32[8] memory localStack;
+        _execs(tos, configs, datas, msg.sender, localStack);
     }
 
     function _chainedExecs(
         address user,
+        uint256 bridgedAmount,
         address[] memory tos,
         bytes32[] memory configs,
         bytes[] memory datas
     ) internal {
+        bytes32[8] memory localStack;
+        localStack[0] = bytes32(bridgedAmount);
+
         _preProcess(user);
-        _execs(tos, configs, datas, user);
+        _execs(tos, configs, datas, user, localStack);
         _postProcess();
     }
 
@@ -136,10 +142,9 @@ contract GTP is AxelarExecutable, Storage, Config {
         address[] memory tos,
         bytes32[] memory configs,
         bytes[] memory datas,
-        address user
+        address user,
+        bytes32[8] memory localStack // bytes32[256] memory localStack;
     ) internal {
-        // bytes32[256] memory localStack;
-        bytes32[8] memory localStack;
         uint256 index;
         uint256 counter;
 
@@ -156,7 +161,7 @@ contract GTP is AxelarExecutable, Storage, Config {
 
             // Bridge selector is 0x00000000
             if (selector == bytes4(0)) {
-                console.log('Bridge selector is 0x00000000');
+                // console.log('Bridge selector is 0x00000000');
                 // Pass the rest of the execution data to the next chain.
                 // Include the bridging execution (index i), which is needed for bridging the token.
                 address[] memory _tos = new address[](tos.length - i);
@@ -166,17 +171,13 @@ contract GTP is AxelarExecutable, Storage, Config {
                 // 00000001 [1 -> Ethereum]
                 // 00000089 [137 -> Polygon]
                 // c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 [WETH]
-                console.logBytes(data);
-                console.logBytes(data.slice(4, 4));
-                console.logBytes(data.slice(8, 4));
-                console.logBytes(data.slice(12, 20));
                 // Start from 4 as first 4 bytes are the selector
                 uint256 chainIdSrc = uint256(bytes32(data.slice(4, 4)) >> 224); // .toUint256(0);
-                console.log('chainIdSrc', chainIdSrc);
+                // console.log('chainIdSrc', chainIdSrc);
                 uint256 chainIdDest = uint256(bytes32(data.slice(8, 4)) >> 224); // .toUint256(0);
-                console.log('chainIdDest', chainIdDest);
+                // console.log('chainIdDest', chainIdDest);
                 address tokenAddress = address(bytes20(bytes32(data.slice(12, 20)))); // .toAddress(0);
-                console.log('tokenAddress', tokenAddress);
+                // console.log('tokenAddress', tokenAddress);
 
                 // skip the i-th tx since it (must) indicates bridging
                 for (uint256 j = 1; j < tos.length - i;) {
@@ -257,28 +258,28 @@ contract GTP is AxelarExecutable, Storage, Config {
         // uint256 amount = 0.025 ether;
         // _trim(data, bridgeConfig, localStack, index);
 
-        console.logBytes32(localStack[0]);
+        // console.logBytes32(localStack[0]);
         uint256 amountToBridge = uint256(localStack[0]); // peek
         // console.log(amountToBridge);
         // uint256 amountToBridge = 1 ether;
 
-        console.log(
-            'Native Token balance before deposit:',
-            address(this).balance
-        );
-        console.log(
-            'Wrapped Native Token balance before deposit:',
-            IERC20(wrappedTokenAddress).balanceOf(address(this))
-        );
+        // console.log(
+        //     'Native Token balance before deposit:',
+        //     address(this).balance
+        // );
+        // console.log(
+        //     'Wrapped Native Token balance before deposit:',
+        //     IERC20(wrappedTokenAddress).balanceOf(address(this))
+        // );
         IWrappedNativeToken(wrappedTokenAddress).deposit{ value: amountToBridge }();
-        console.log(
-            'Native Token balance after deposit:',
-            address(this).balance
-        );
-        console.log(
-            'Wrapped Native Token balance after deposit:',
-            IERC20(wrappedTokenAddress).balanceOf(address(this))
-        );
+        // console.log(
+        //     'Native Token balance after deposit:',
+        //     address(this).balance
+        // );
+        // console.log(
+        //     'Wrapped Native Token balance after deposit:',
+        //     IERC20(wrappedTokenAddress).balanceOf(address(this))
+        // );
 
         // AVAX (Avalanche)
         // ETH (Ethereum)
@@ -289,7 +290,8 @@ contract GTP is AxelarExecutable, Storage, Config {
         // address tokenAddress = gateway.tokenAddresses(symbol);
 
         // Pay gas
-        gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
+        // gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
+        gasReceiver.payNativeGasForExpressCallWithToken{value: msg.value}(
             address(this), // sender
             dstChain,
             dstContractAddr,
@@ -310,16 +312,27 @@ contract GTP is AxelarExecutable, Storage, Config {
         string calldata,
         string calldata,
         bytes calldata payload,
-        string calldata tokenSymbol,
-        uint256 amount
+        string calldata, // tokenSymbol,
+        uint256 bridgedAmount
     ) internal override {
+        // console.log(tokenSymbol);
+        // console.log(bridgedAmount);
         address user;
         address[] memory tos;
         bytes32[] memory configs;
         bytes[] memory datas;
         
         (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
-        _chainedExecs(user, tos, configs, datas);
+        // console.log(user);
+        // console.log(tos[0]);
+        // console.logBytes32(configs[0]);
+        // console.logBytes(datas[0]);
+
+        tos[0].call(datas[0]);
+
+        // if (tos.length > 0) {
+        //     _chainedExecs(user, bridgedAmount, tos, configs, datas);
+        // }
     }
 
     /**

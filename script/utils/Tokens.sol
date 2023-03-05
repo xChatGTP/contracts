@@ -31,6 +31,10 @@ contract Tokens {
 	function getAxelarUSDC() public view returns (address addr) {
 		addr = block.chainid == 5
 			? 0x254d06f33bDc5b8ee05b2ea472107E300226659A
+			: block.chainid == 137
+			? 0x750e4C4984a9e0f12978eA6742Bc1c5D248f40ed
+			: block.chainid == 1284
+			? 0xCa01a1D0993565291051daFF390892518ACfAD3A
 			: block.chainid == 1287
 			? 0xD1633F7Fb3d716643125d6415d4177bC36b7186b
 			: block.chainid == 43113

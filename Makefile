@@ -64,6 +64,11 @@ deploy-handlers-goerli :; @forge script script/handlers/${contract}.s.sol:Deploy
 
 deploy-handlers-mumbai :; @forge script script/handlers/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${MUMBAI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${POLYGONSCAN_API_KEY} -vvvv
 
+deploy-handlers-moonbase :; @forge script script/handlers/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${MOONBASE_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${MOONSCAN_API_KEY} -vvvv
+
+action-mumbai :; @forge script script/actions/${contract}.s.sol:Action${contract} --via-ir --optimize --rpc-url ${MUMBAI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast -vvvv
+action-moonbase :; @forge script script/actions/${contract}.s.sol:Action${contract} --via-ir --optimize --rpc-url ${MOONBASE_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast -vvvv
+
 # This is the private key of account from the mnemonic from the "make anvil" command
 # `make deploy-anvil contract=VenusHedger`
 deploy-anvil :; @forge script script/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url http://localhost:8545  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast 

@@ -12,7 +12,11 @@ contract HUniswapV2 is HandlerBase {
     using SafeERC20 for IERC20;
 
     // prettier-ignore
-    address public constant UNISWAPV2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    address public immutable UNISWAPV2_ROUTER;
+
+    constructor(address _router) {
+        UNISWAPV2_ROUTER = _router;
+    }
 
     function getContractName() public pure override returns (string memory) {
         return 'HUniswapV2';
@@ -60,7 +64,7 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('addLiquidityETH');
         }
-        _tokenApproveZero(token, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(token, UNISWAPV2_ROUTER);
 
         // Update involved token
         address pair =
@@ -114,8 +118,8 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('addLiquidity');
         }
-        _tokenApproveZero(tokenA, UNISWAPV2_ROUTER);
-        _tokenApproveZero(tokenB, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(tokenA, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(tokenB, UNISWAPV2_ROUTER);
 
         // Update involved token
         address pair =
@@ -156,7 +160,7 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('removeLiquidityETH');
         }
-        _tokenApproveZero(pair, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(pair, UNISWAPV2_ROUTER);
 
         // Update involved token
         _updateToken(token);
@@ -197,7 +201,7 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('removeLiquidity');
         }
-        _tokenApproveZero(pair, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(pair, UNISWAPV2_ROUTER);
 
         // Update involved token
         _updateToken(tokenA);
@@ -295,7 +299,7 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('swapExactTokensForETH');
         }
-        _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
     }
 
     function swapTokensForExactETH(
@@ -329,7 +333,7 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('swapTokensForExactETH');
         }
-        _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
     }
 
     function swapExactTokensForTokens(
@@ -367,7 +371,7 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('swapExactTokensForTokens');
         }
-        _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
         _updateToken(tokenOut);
     }
 
@@ -408,7 +412,7 @@ contract HUniswapV2 is HandlerBase {
         } catch {
             _revertMsg('swapTokensForExactTokens');
         }
-        _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
+        // _tokenApproveZero(tokenIn, UNISWAPV2_ROUTER);
         _updateToken(tokenOut);
     }
 }

@@ -68,7 +68,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(tokenIn, address(ROUTER), params.amountIn);
         amountOut = _exactInputSingle(0, params);
-        _tokenApproveZero(tokenIn, address(ROUTER));
+        // _tokenApproveZero(tokenIn, address(ROUTER));
         wrappedNativeToken.withdraw(amountOut);
     }
 
@@ -92,7 +92,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(tokenIn, address(ROUTER), params.amountIn);
         amountOut = _exactInputSingle(0, params);
-        _tokenApproveZero(tokenIn, address(ROUTER));
+        // _tokenApproveZero(tokenIn, address(ROUTER));
         _updateToken(tokenOut);
     }
 
@@ -144,7 +144,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(tokenIn, address(ROUTER), params.amountIn);
         amountOut = _exactInput(0, params);
-        _tokenApproveZero(tokenIn, address(ROUTER));
+        // _tokenApproveZero(tokenIn, address(ROUTER));
         wrappedNativeToken.withdraw(amountOut);
     }
 
@@ -165,7 +165,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(tokenIn, address(ROUTER), params.amountIn);
         amountOut = _exactInput(0, params);
-        _tokenApproveZero(tokenIn, address(ROUTER));
+        // _tokenApproveZero(tokenIn, address(ROUTER));
         _updateToken(tokenOut);
     }
 
@@ -212,7 +212,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(params.tokenIn, address(ROUTER), params.amountInMaximum);
         amountIn = _exactOutputSingle(0, params);
-        _tokenApproveZero(params.tokenIn, address(ROUTER));
+        // _tokenApproveZero(params.tokenIn, address(ROUTER));
         wrappedNativeToken.withdraw(params.amountOut);
     }
 
@@ -237,7 +237,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(params.tokenIn, address(ROUTER), params.amountInMaximum);
         amountIn = _exactOutputSingle(0, params);
-        _tokenApproveZero(params.tokenIn, address(ROUTER));
+        // _tokenApproveZero(params.tokenIn, address(ROUTER));
         _updateToken(params.tokenOut);
     }
 
@@ -293,7 +293,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(tokenIn, address(ROUTER), params.amountInMaximum);
         amountIn = _exactOutput(0, params);
-        _tokenApproveZero(tokenIn, address(ROUTER));
+        // _tokenApproveZero(tokenIn, address(ROUTER));
         wrappedNativeToken.withdraw(amountOut);
     }
 
@@ -316,7 +316,7 @@ contract HUniswapV3 is HandlerBase {
         // Approve token
         _tokenApprove(tokenIn, address(ROUTER), params.amountInMaximum);
         amountIn = _exactOutput(0, params);
-        _tokenApproveZero(tokenIn, address(ROUTER));
+        // _tokenApproveZero(tokenIn, address(ROUTER));
         _updateToken(tokenOut);
     }
 
