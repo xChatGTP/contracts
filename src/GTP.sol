@@ -14,12 +14,14 @@ import { Config } from './misc/Config.sol';
 import { Storage } from './misc/Storage.sol';
 import { LibStack } from './libs/LibStack.sol';
 import { LibParam } from './libs/LibParam.sol';
+import { BytesLib } from './libs/BytesLib.sol';
 import { ISwapRouter } from './handlers/uniswapv3/ISwapRouter.sol';
 
 contract GTP is AxelarExecutable, Storage, Config {
     using SafeERC20 for IERC20;
     using Address for address;
     using AddressToString for address;
+    using BytesLib for bytes;
     using LibParam for bytes32;
     using LibStack for bytes32[];
     using Strings for uint256;
@@ -161,11 +163,16 @@ contract GTP is AxelarExecutable, Storage, Config {
                 // 00000001 [1 -> Ethereum]
                 // 00000089 [137 -> Polygon]
                 // c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 [WETH]
-                uint256 chainIdSrc = uint256(bytes32(extractSig(data, 0, 4)));
-                uint256 chainIdDest = uint256(bytes32(extractSig(data, 4, 8)));
-                address tokenAddress = address(bytes20(extractSig(data, 8, 20)));
+                console.logBytes(data);
+                console.logBytes(data.slice(4, 4));
+                console.logBytes(data.slice(8, 4));
+                console.logBytes(data.slice(12, 20));
+                // Start from 4 as first 4 bytes are the selector
+                uint256 chainIdSrc = uint256(bytes32(data.slice(4, 4)) >> 224); // .toUint256(0);
                 console.log('chainIdSrc', chainIdSrc);
+                uint256 chainIdDest = uint256(bytes32(data.slice(8, 4)) >> 224); // .toUint256(0);
                 console.log('chainIdDest', chainIdDest);
+                address tokenAddress = address(bytes20(bytes32(data.slice(12, 20)))); // .toAddress(0);
                 console.log('tokenAddress', tokenAddress);
 
                 // skip the i-th tx since it (must) indicates bridging
@@ -241,8 +248,10 @@ contract GTP is AxelarExecutable, Storage, Config {
 
         SiblingChain memory nextChain = siblingChains[chainIdDest];
 
-        string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
-        string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
+        // string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
+        // string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
+        string memory dstChain = 'avalanche';
+        string memory dstContractAddr = '0x1';
         
         // uint256 amount = 0.025 ether;
         // _trim(data, bridgeConfig, localStack, index);
@@ -514,14 +523,6 @@ contract GTP is AxelarExecutable, Storage, Config {
 	) external onlyOwner {
 		siblingChains[chainNumber] = SiblingChain(chainId, chainName, _gtp);
 	}
-
-    function extractSig (bytes memory data, uint8 from, uint8 n) public pure returns (bytes memory) {
-        bytes memory returnValue = new bytes(n);
-        for (uint8 i = 0; i < n - from; i++) {
-            returnValue[i] = data[i + from]; 
-        }
-        return returnValue;
-    }
 
     fallback() external payable {}
 
