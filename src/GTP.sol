@@ -15,7 +15,7 @@ import { Storage } from './misc/Storage.sol';
 import { LibStack } from './libs/LibStack.sol';
 import { LibParam } from './libs/LibParam.sol';
 import { BytesLib } from './libs/BytesLib.sol';
-import { ISwapRouter } from './handlers/uniswapv3/ISwapRouter.sol';
+// import { ISwapRouter } from './handlers/uniswapv3/ISwapRouter.sol';
 import { IWrappedNativeToken } from './handlers/wrappednativetoken/IWrappedNativeToken.sol';
 
 contract GTP is AxelarExecutable, Storage, Config {

@@ -112,11 +112,12 @@ abstract contract HandlerBase is Storage, Config {
         address spender,
         uint256 amount
     ) internal {
-        IERC20(token).safeApprove(spender, amount);
+        // IERC20(token).safeApprove(spender, amount);
+        IERC20(token).approve(spender, amount);
     }
 
     function _tokenApproveZero(address token, address spender) internal {
-        IERC20(token).safeApprove(spender, 1); // 1 for warm load
+        // IERC20(token).safeApprove(spender, 0); // 0 since Safe approve only lets setting to 0 or when allowance is at 0
     }
 
     function _isNotNativeToken(address token) internal view returns (bool) {
