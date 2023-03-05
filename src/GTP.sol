@@ -16,7 +16,7 @@ import { LibStack } from './libs/LibStack.sol';
 import { LibParam } from './libs/LibParam.sol';
 import { ISwapRouter } from './handlers/uniswapv3/ISwapRouter.sol';
 
-contract GTP is Storage, Config {
+contract GTP is AxelarExecutable, Storage, Config {
     using SafeERC20 for IERC20;
     using Address for address;
     using AddressToString for address;
@@ -44,6 +44,7 @@ contract GTP is Storage, Config {
 		address gtp; // GTP contract deployed on this chain
 	}
 
+    /// Note:
     address private constant NATIVE_TOKEN_ALT = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     address public owner;
@@ -65,11 +66,13 @@ contract GTP is Storage, Config {
         address _gasReceiver,
         string memory _nativeTokenSymbol,
         address _nativeTokenAddress
-    ) {
-        // gasReceiver = IAxelarGasService(_gasReceiver);
+    ) AxelarExecutable(_gateway) {
+        gasReceiver = IAxelarGasService(_gasReceiver);
         // wrappedTokenAddress = _nativeTokenAddress;
         NATIVE_TOKEN_SYMBOL = _nativeTokenSymbol;
         owner = msg.sender;
+
+        IERC20(_nativeTokenAddress).approve(_gateway, type(uint256).max);
     }
 
     function transferOwnership(address newOwner) public onlyOwner {
@@ -107,25 +110,6 @@ contract GTP is Storage, Config {
         _execs(tos, configs, datas, msg.sender);
     }
 
-    /**
-     * @notice Executed by Axelar on target chain (from source chain).
-     */
-    // function _executeWithToken(
-    //     string calldata,
-    //     string calldata,
-    //     bytes calldata payload,
-    //     string calldata tokenSymbol,
-    //     uint256 amount
-    // ) internal override {
-    //     address user;
-    //     address[] memory tos;
-    //     bytes32[] memory configs;
-    //     bytes[] memory datas;
-        
-    //     (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
-    //     _chainedExecs(user, tos, configs, datas);
-    // }
-
     function _chainedExecs(
         address user,
         address[] memory tos,
@@ -158,112 +142,156 @@ contract GTP is Storage, Config {
         require(tos.length == configs.length, 'Tos and configs length inconsistent');
 
         for (uint256 i = 0; i < tos.length;) {
-            console.log(i);
+            // console.log(i);
             address to = tos[i];
             bytes32 config = configs[i];
             bytes memory data = datas[i];
 
-            // Pass the rest of the execution data  to the next chain.
-            // Include the bridging execution (index i), which is needed for bridging the token.
-            // {
-            //     address[] memory _tos = new address[](tos.length - i);
-            //     bytes32[] memory _configs = new bytes32[](tos.length - i);
-            //     bytes[] memory _datas = new bytes[](tos.length - i);
-
-            //     // skip the i-th tx since it (must) indicates bridging
-            //     for (uint256 j = i + 1;  j < tos.length;) {
-            //         _tos[tos.length - j] = tos[j];
-            //         _configs[tos.length - j] = configs[j];
-            //         _datas[tos.length - j] = datas[j];
-            //         unchecked {
-            //             ++j;
-            //         }
-            //     }
-
-            //     _execsTransferChain(
-            //         _tos,
-            //         _configs,
-            //         _datas,
-            //         user,
-            //         chainNum,
-            //         nextChainNum
-            //     );
-            // }
-
-            // Check if the data contains dynamic parameter
-            if (!config.isStatic()) {
-                // If so, trim the exectution data base on the configuration and stack content
-                _trim(data, config, localStack, index);
-            }
-            // Emit the execution log before call
             bytes4 selector = _getSelector(data);
-            emit LogBegin(to, selector, data);
 
-            // Check if the output will be referenced afterwards
-            bytes memory result = _exec(to, data, counter);
-            counter++;
+            // Bridge selector is 0x00000000
+            if (selector == bytes4(0)) {
+                console.log('Bridge selector is 0x00000000');
+                // Pass the rest of the execution data to the next chain.
+                // Include the bridging execution (index i), which is needed for bridging the token.
+                address[] memory _tos = new address[](tos.length - i);
+                bytes32[] memory _configs = new bytes32[](tos.length - i);
+                bytes[] memory _datas = new bytes[](tos.length - i);
 
-            // Emit the execution log after call
-            emit LogEnd(to, selector, result);
+                // 00000001 [1 -> Ethereum]
+                // 00000089 [137 -> Polygon]
+                // c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 [WETH]
+                uint256 chainIdSrc = uint256(bytes32(extractSig(data, 0, 4)));
+                uint256 chainIdDest = uint256(bytes32(extractSig(data, 4, 8)));
+                address tokenAddress = address(bytes20(extractSig(data, 8, 20)));
+                console.log('chainIdSrc', chainIdSrc);
+                console.log('chainIdDest', chainIdDest);
+                console.log('tokenAddress', tokenAddress);
 
-            if (config.isReferenced()) {
-                // If so, parse the output and place it into local stack
-                uint256 num = config.getReturnNum();
-                uint256 newIndex = _parse(localStack, result, index);
-                require(
-                    newIndex == index + num,
-                    'Return num and parsed return num not matched'
+                // skip the i-th tx since it (must) indicates bridging
+                for (uint256 j = 1; j < tos.length - i;) {
+                    _tos[j - 1] = tos[i + j];
+                    _configs[j - 1] = configs[i + j];
+                    _datas[j - 1] = datas[i + j];
+                    unchecked {
+                        ++j;
+                    }
+                }
+
+                _execsTransferChain(
+                    _tos,
+                    _configs,
+                    _datas,
+                    user,
+                    chainIdSrc,
+                    chainIdDest,
+                    tokenAddress,
+                    localStack
                 );
-                index = newIndex;
-            }
+                break;
+            } else {
+                // Check if the data contains dynamic parameter
+                if (!config.isStatic()) {
+                    // If so, trim the exectution data base on the configuration and stack content
+                    _trim(data, config, localStack, index);
+                }
+                // Emit the execution log before call
+                emit LogBegin(to, selector, data);
 
-            // Setup the process to be triggered in the post-process phase
-            _setPostProcess(to);
+                // Check if the output will be referenced afterwards
+                bytes memory result = _exec(to, data, counter);
+                counter++;
 
-            unchecked {
-                ++i;
+                // Emit the execution log after call
+                emit LogEnd(to, selector, result);
+
+                if (config.isReferenced()) {
+                    // If so, parse the output and place it into local stack
+                    uint256 num = config.getReturnNum();
+                    uint256 newIndex = _parse(localStack, result, index);
+                    require(
+                        newIndex == index + num,
+                        'Return num and parsed return num not matched'
+                    );
+                    index = newIndex;
+                }
+
+                // Setup the process to be triggered in the post-process phase
+                _setPostProcess(to);
+
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
 
-    // function _execsTransferChain(
-    //     address[] memory tos,
-    //     bytes32[] memory configs,
-    //     bytes[] memory datas,
-    //     address user,
-    //     uint256 curChainNum,
-    //     uint256 nextChainNum
-    // ) internal {
-    //     require(tos.length > 1, 'Invalid length in chain transfer');
-    //     bytes memory payload = abi.encode(user, tos, configs, datas);
+    function _execsTransferChain(
+        address[] memory tos,
+        bytes32[] memory configs,
+        bytes[] memory datas,
+        address user,
+        uint256 chainIdSrc,
+        uint256 chainIdDest,
+        address tokenAddress,
+        bytes32[8] memory localStack
+    ) internal {
+        require(tos.length >= 1, 'Invalid length in chain transfer');
+        bytes memory payload = abi.encode(user, tos, configs, datas);
 
-    //     SiblingChain memory nextChain = siblingChains[nextChainNum];
-    //     string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
-    //     string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
-    //     uint256 amount = 0.025 ether;
+        SiblingChain memory nextChain = siblingChains[chainIdDest];
 
-    //     // AVAX (Avalanche)
-    //     // ETH (Ethereum)
-    //     // FTM (Fantom)
-    //     // GLMR (Moonbeam)
-    //     // MATIC (Polygon)
+        string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
+        string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
+        
+        // uint256 amount = 0.025 ether;
+        // _trim(data, bridgeConfig, localStack, index);
 
-    //     // address tokenAddress = gateway.tokenAddresses(symbol);
+        // uint256 amountToBridge = uint256(localStack[0]); // peek
+        // console.log(amountToBridge);
+        uint256 amountToBridge = 1 ether;
 
-    //     // Pay gas
-    //     gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
-    //         address(this), // sender
-    //         dstChain,
-    //         dstContractAddr,
-    //         payload,
-    //         NATIVE_TOKEN_SYMBOL,
-    //         amount,
-    //         msg.sender
-    //     );
+        // AVAX (Avalanche)
+        // ETH (Ethereum)
+        // FTM (Fantom)
+        // GLMR (Moonbeam)
+        // MATIC (Polygon)
 
-    //     // Initiate GMP
-    //     gateway.callContractWithToken(dstChain, dstContractAddr, payload, NATIVE_TOKEN_SYMBOL, amount);
-    // }
+        // address tokenAddress = gateway.tokenAddresses(symbol);
+
+        // Pay gas
+        gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
+            address(this), // sender
+            dstChain,
+            dstContractAddr,
+            payload,
+            NATIVE_TOKEN_SYMBOL, // TODO: IERC20(tokenAddress).name()
+            amountToBridge,
+            msg.sender
+        );
+
+        // Initiate GMP
+        gateway.callContractWithToken(dstChain, dstContractAddr, payload, NATIVE_TOKEN_SYMBOL, amountToBridge);
+    }
+
+    /**
+     * @notice Executed by Axelar on target chain (from source chain).
+     */
+    function _executeWithToken(
+        string calldata,
+        string calldata,
+        bytes calldata payload,
+        string calldata tokenSymbol,
+        uint256 amount
+    ) internal override {
+        address user;
+        address[] memory tos;
+        bytes32[] memory configs;
+        bytes[] memory datas;
+        
+        (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
+        _chainedExecs(user, tos, configs, datas);
+    }
 
     /**
      * @notice Trimming the execution data.
@@ -477,6 +505,14 @@ contract GTP is Storage, Config {
 	) external onlyOwner {
 		siblingChains[chainNumber] = SiblingChain(chainId, chainName, _gtp);
 	}
+
+    function extractSig (bytes memory data, uint8 from, uint8 n) public pure returns (bytes memory) {
+        bytes memory returnValue = new bytes(n);
+        for (uint8 i = 0; i < n - from; i++) {
+            returnValue[i] = data[i + from]; 
+        }
+        return returnValue;
+    }
 
     fallback() external payable {}
 

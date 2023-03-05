@@ -24,6 +24,9 @@ contract GTPTest is Test {
 	address internal wNativeToken;
 	address internal swapRouter;
 
+	address internal gateway;
+	address internal gasReceiver;
+
 	function setUp() public {
 		Tokens tokens = new Tokens();
 		DeployHUniswapV3 dhuniv3 = new DeployHUniswapV3();
@@ -31,12 +34,14 @@ contract GTPTest is Test {
 		wNativeToken = tokens.getWrappedNativeToken();
 		swapRouter = dhuniv3.getSwapRouter();
 
+		gateway = tokens.getAxelarGateway();
+		gasReceiver = tokens.getAxelarGasService();
+
 		gtp = new GTP(
-				address(1), // gateway
-				address(1), // gasReceiver
-				'MATIC', // native token symbol
+				gateway, // gateway
+				gasReceiver, // gasReceiver
+				'WMATIC', // native token symbol
 				wNativeToken // native token
-				// swapRouter // uniswap v3 router
 		);
 
 		IERC20(wNativeToken).approve(address(gtp), type(uint256).max);
@@ -105,6 +110,42 @@ contract GTPTest is Test {
 		console.log('matic bal (GTP)', address(gtp).balance);
 		console.log('usdc bal (this)', IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).balanceOf(address(this)));
 		console.log('usdc bal (GTP)', IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).balanceOf(address(gtp)));
+	}
+
+	function testBridge() public {
+		address[] memory tos = new address[](2);
+		bytes32[] memory configs = new bytes32[](2);
+		bytes[] memory datas = new bytes[](2);
+
+		tos[0] = address(hFunds);
+		configs[0] = 0x0000000000000000000000000000000000000000000000000000000000000000;
+		datas[0] = hex'd0797f840000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009c3C9283D3e44854697Cd22D3Faa240Cfb03288900000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000de0b6b3a7640000';
+
+		tos[1] = address(0);
+		configs[1] = 0x0100000000000000000100ffffffffffffffffffffffffffffffffffffffffff;
+		datas[1] = hex'00000000000138810000A8699c3C9283D3e44854697Cd22D3Faa240Cfb032889';
+
+		gtp.batchExec{ value: 1 ether }(tos, configs, datas);
+	}
+
+	function testSwapNBridge() public {
+		address[] memory tos = new address[](3);
+		bytes32[] memory configs = new bytes32[](3);
+		bytes[] memory datas = new bytes[](3);
+
+		tos[0] = address(hFunds);
+		configs[0] = 0x0000000000000000000000000000000000000000000000000000000000000000;
+		datas[0] = hex'd0797f840000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009c3C9283D3e44854697Cd22D3Faa240Cfb03288900000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000de0b6b3a7640000';
+
+		tos[1] = address(hUniswapV3);
+		configs[1] = 0x0001000000000000000000000000000000000000000000000000000000000000;
+		datas[1] = hex'8aa5b89b0000000000000000000000002c852e740B62308c46DD29B982FBb650D063Bd0700000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000';
+
+		tos[2] = address(0);
+		configs[2] = 0x0100000000000000000100ffffffffffffffffffffffffffffffffffffffffff;
+		datas[2] = hex'00000000000138810000A8699c3C9283D3e44854697Cd22D3Faa240Cfb032889';
+
+		gtp.batchExec{ value: 1 ether }(tos, configs, datas);
 	}
 
 	fallback() external payable {}

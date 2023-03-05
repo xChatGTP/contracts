@@ -37,4 +37,36 @@ contract Tokens {
 		
 		if (addr == address(0)) revert('Unsupported chain');
 	}
+
+	function getAxelarGateway() public view returns (address addr) {
+		addr = block.chainid == 5
+			? 0xe432150cce91c13a887f7D836923d5597adD8E31
+			: block.chainid == 137
+			? 0x6f015F16De9fC8791b234eF68D486d2bF203FBA8
+			: block.chainid == 43113
+			? 0xC249632c2D40b9001FE907806902f63038B737Ab
+			: block.chainid == 43114
+			? 0x5029C0EFf6C34351a0CEc334542cDb22c7928f78
+			: block.chainid == 80001
+			? 0xBF62ef1486468a6bd26Dd669C06db43dEd5B849B
+			: address(0);
+		
+		if (addr == address(0)) revert('Unsupported chain');
+	}
+
+	function getAxelarGasService() public view returns (address addr) {
+		addr = block.chainid == 5
+			? 0xbE406F0189A0B4cf3A05C286473D23791Dd44Cc6
+			: block.chainid == 137
+			? 0x2d5d7d31F671F86C782533cc367F14109a082712
+			: block.chainid == 43113
+			? 0xbE406F0189A0B4cf3A05C286473D23791Dd44Cc6
+			: block.chainid == 43114
+			? 0x2d5d7d31F671F86C782533cc367F14109a082712
+			: block.chainid == 80001
+			? 0xbE406F0189A0B4cf3A05C286473D23791Dd44Cc6
+			: address(0);
+		
+		if (addr == address(0)) revert('Unsupported chain');
+	}
 }
