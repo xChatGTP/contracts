@@ -58,6 +58,8 @@ deploy-goerli :; @forge script script/${contract}.s.sol:Deploy${contract} --via-
 
 deploy-mumbai :; @forge script script/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${MUMBAI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${POLYGONSCAN_API_KEY} -vvvv
 
+deploy-moonbase :; @forge script script/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${MOONBASE_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${MOONSCAN_API_KEY} -vvvv
+
 deploy-handlers-goerli :; @forge script script/handlers/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${GOERLI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
 
 deploy-handlers-mumbai :; @forge script script/handlers/${contract}.s.sol:Deploy${contract} --via-ir --optimize --rpc-url ${MUMBAI_RPC_URL} --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${POLYGONSCAN_API_KEY} -vvvv

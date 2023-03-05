@@ -59,6 +59,8 @@ contract GTP is AxelarExecutable, Storage, Config {
 
     string private NATIVE_TOKEN_SYMBOL;
 
+    address private wrappedTokenAddress; // NATIVE TOKEN WRAPPED ADDRESS
+
     modifier onlyOwner() {
         require(msg.sender == owner, 'Only owner');
         _;
@@ -71,7 +73,7 @@ contract GTP is AxelarExecutable, Storage, Config {
         address _nativeTokenAddress
     ) AxelarExecutable(_gateway) {
         gasReceiver = IAxelarGasService(_gasReceiver);
-        // wrappedTokenAddress = _nativeTokenAddress;
+        wrappedTokenAddress = _nativeTokenAddress;
         NATIVE_TOKEN_SYMBOL = _nativeTokenSymbol;
         owner = msg.sender;
 
@@ -260,23 +262,23 @@ contract GTP is AxelarExecutable, Storage, Config {
         // console.log(amountToBridge);
         // uint256 amountToBridge = 1 ether;
 
-        // console.log(
-        //     'MATIC balance before deposit:',
-        //     address(this).balance
-        // );
-        // console.log(
-        //     'WMATIC balance before deposit:',
-        //     IERC20(0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889).balanceOf(address(this))
-        // );
-        IWrappedNativeToken(0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889).deposit{ value: amountToBridge }();
-        // console.log(
-        //     'MATIC balance after deposit:',
-        //     address(this).balance
-        // );
-        // console.log(
-        //     'WMATIC balance after deposit:',
-        //     IERC20(0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889).balanceOf(address(this))
-        // );
+        console.log(
+            'Native Token balance before deposit:',
+            address(this).balance
+        );
+        console.log(
+            'Wrapped Native Token balance before deposit:',
+            IERC20(wrappedTokenAddress).balanceOf(address(this))
+        );
+        IWrappedNativeToken(wrappedTokenAddress).deposit{ value: amountToBridge }();
+        console.log(
+            'Native Token balance after deposit:',
+            address(this).balance
+        );
+        console.log(
+            'Wrapped Native Token balance after deposit:',
+            IERC20(wrappedTokenAddress).balanceOf(address(this))
+        );
 
         // AVAX (Avalanche)
         // ETH (Ethereum)

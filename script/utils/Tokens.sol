@@ -11,6 +11,8 @@ contract Tokens {
 			? 0x4200000000000000000000000000000000000006
 			: block.chainid == 137 // Polygon
 			? 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270
+			: block.chainid == 1287 // Moonbase Alpha
+			? 0x1436aE0dF0A8663F18c0Ec51d7e2E46591730715
 			: block.chainid == 42161 // Arbitrum One
 			? 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1
 			: block.chainid == 43113 // Avalanche Fuji
@@ -29,6 +31,8 @@ contract Tokens {
 	function getAxelarUSDC() public view returns (address addr) {
 		addr = block.chainid == 5
 			? 0x254d06f33bDc5b8ee05b2ea472107E300226659A
+			: block.chainid == 1287
+			? 0xD1633F7Fb3d716643125d6415d4177bC36b7186b
 			: block.chainid == 43113
 			? 0x57F1c63497AEe0bE305B8852b354CEc793da43bB
 			: block.chainid == 80001
@@ -43,6 +47,8 @@ contract Tokens {
 			? 0xe432150cce91c13a887f7D836923d5597adD8E31
 			: block.chainid == 137
 			? 0x6f015F16De9fC8791b234eF68D486d2bF203FBA8
+			: block.chainid == 1287
+			? 0x5769D84DD62a6fD969856c75c7D321b84d455929
 			: block.chainid == 43113
 			? 0xC249632c2D40b9001FE907806902f63038B737Ab
 			: block.chainid == 43114
@@ -59,6 +65,8 @@ contract Tokens {
 			? 0xbE406F0189A0B4cf3A05C286473D23791Dd44Cc6
 			: block.chainid == 137
 			? 0x2d5d7d31F671F86C782533cc367F14109a082712
+			: block.chainid == 1287
+			? 0xbE406F0189A0B4cf3A05C286473D23791Dd44Cc6
 			: block.chainid == 43113
 			? 0xbE406F0189A0B4cf3A05C286473D23791Dd44Cc6
 			: block.chainid == 43114
@@ -68,5 +76,15 @@ contract Tokens {
 			: address(0);
 		
 		if (addr == address(0)) revert('Unsupported chain');
+	}
+
+	function getAxelarNativeTokenSymbol() public view returns (string memory symbol) {
+		symbol = block.chainid == 80001
+			? 'WMATIC'
+			: block.chainid == 1287
+			? 'WDEV'
+			: '';
+
+		// if (symbol == '') revert('Unsupported chain');
 	}
 }
