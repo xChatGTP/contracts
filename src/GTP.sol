@@ -8,7 +8,7 @@ import { StringToAddress, AddressToString } from 'axelar-gmp/utils/AddressString
 import { SafeERC20, IERC20 } from 'oz/token/ERC20/utils/SafeERC20.sol';
 import { Address } from 'oz/utils/Address.sol';
 import { Strings } from 'oz/utils/Strings.sol';
-// import { console } from 'forge-std/console.sol';
+import { console } from 'forge-std/console.sol';
 
 import { Config } from './misc/Config.sol';
 import { Storage } from './misc/Storage.sol';
@@ -305,6 +305,41 @@ contract GTP is AxelarExecutable, Storage, Config {
         gateway.callContractWithToken(dstChain, dstContractAddr, payload, NATIVE_TOKEN_SYMBOL, amountToBridge);
     }
 
+    // function executeWithToken(
+    //     bytes32 commandId,
+    //     string calldata sourceChain,
+    //     string calldata sourceAddress,
+    //     bytes calldata payload,
+    //     string calldata tokenSymbol,
+    //     uint256 amount
+    // ) external override {
+    //     bytes32 payloadHash = keccak256(payload);
+
+    //     if (
+    //         !gateway.validateContractCallAndMint(
+    //             commandId,
+    //             sourceChain,
+    //             sourceAddress,
+    //             payloadHash,
+    //             tokenSymbol,
+    //             amount
+    //         )
+    //     ) revert NotApprovedByGateway();
+
+    //     address user;
+    //     address[] memory tos;
+    //     bytes32[] memory configs;
+    //     bytes[] memory datas;
+        
+    //     (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
+    //     console.log(user);
+    //     console.log(tos[0]);
+    //     console.logBytes32(configs[0]);
+    //     console.logBytes(datas[0]);
+
+    //     _executeWithToken(sourceChain, sourceAddress, payload, tokenSymbol, amount);
+    // }
+
     /**
      * @notice Executed by Axelar on target chain (from source chain).
      */
@@ -323,14 +358,11 @@ contract GTP is AxelarExecutable, Storage, Config {
         bytes[] memory datas;
         
         (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
-        // console.log(user);
-        // console.log(tos[0]);
-        // console.logBytes32(configs[0]);
-        // console.logBytes(datas[0]);
 
-        tos[0].call(datas[0]);
+        // tos[0].call(datas[0]);
+        IERC20(0xde3dB4FD7D7A5Cc7D8811b7BaFA4103FD90282f3).transfer(user, bridgedAmount);
 
-        // if (tos.length > 0) {
+        // if (tos.length > 1) {
         //     _chainedExecs(user, bridgedAmount, tos, configs, datas);
         // }
     }

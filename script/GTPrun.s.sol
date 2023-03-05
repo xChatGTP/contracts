@@ -15,17 +15,17 @@ contract DeployGTPrun is Script {
         address wNativeToken = tokens.getWrappedNativeToken();
 
         vm.startBroadcast();
-				GTP gtp = GTP(payable(0x721cBaa56e20B90bB4510Aa2019De18ae79596d1));
+				GTP gtp = GTP(payable(0x236A80A4cCf06e8EE6d869B318447d10983D7c03)); // 0x721cBaa56e20B90bB4510Aa2019De18ae79596d1
 
         // 0x57f1c63497aee0be305b8852b354cec793da43bb is aUSDC (just for test)
-        gtp.setSiblingChain(1287, 1287, 'Moonbeam', 0x2373EA77620fbb53b6824CB0CF1Df1006e9e3B5f);
+        gtp.setSiblingChain(1287, 1287, 'Moonbeam', 0x8c5dD4Ed3521dAc9b4f3c668F6D8d5684df07CF4);
 				// gtp.setSiblingChain(80001, 80001, 'Polygon', 0x721cBaa56e20B90bB4510Aa2019De18ae79596d1);
 
-        // IERC20(wNativeToken).approve(address(gtp), type(uint256).max);
-        // IERC20(0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa).approve(
-				// 	address(gtp),
-				// 	type(uint256).max
-				// );
+        IERC20(wNativeToken).approve(address(gtp), type(uint256).max);
+        IERC20(0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa).approve(
+					address(gtp),
+					type(uint256).max
+				);
 
 				address[] memory tos = new address[](3);
 				bytes32[] memory configs = new bytes32[](3);

@@ -26,7 +26,7 @@
     "lint:sol": "solhint \"{src,test}/**/*.sol\"",
     "prettier": "prettier --config \"./.prettierrc.yml\" --write \"**/*.{json,md,sol,yml}\"",
     "prettier:check": "prettier --config \"./.prettierrc.yml\" --check \"**/*.{json,md,sol,yml}\"",
-    "typechain": "typechain --target=ethers-v5 './out/**/*.json'",
+    "typechain": "typechain --target=ethers-v5 './out/**/*.json'"
   },
   "dependencies": {
     "@aave/core-v3": "^1.16.2-beta.1",

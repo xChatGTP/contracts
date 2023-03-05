@@ -27,7 +27,7 @@ build-op :; forge build --via-ir --optimize
 
 type :; npx typechain --target ethers-v5 ./abi/*.json --out-dir ./types
 
-type-move-server :; npx typechain --target ethers-v5 ./abi/*.json && cp -r ./types/ethers-contracts/* ../website/src/types/contracts
+type-move-website :; npx typechain --target ethers-v5 ./abi/*.json && cp -r ./types/ethers-contracts/* ../website/src/types/contracts
 
 bind :; forge bind
 
@@ -78,6 +78,8 @@ deploy-handlers-anvil :; @forge script script/handlers/${contract}.s.sol:Deploy$
 #
 # ABI
 #
-abis : abi-distribution-ex abi-auction abi-vault
+abis: abi-gtp
+
+abi-gtp :; forge inspect --via-ir --optimize src/GTP.sol:GTP abi > abi/GTP.json
 
 abi-distribution-ex :; forge inspect src/DistributionExecutable.sol:DistributionExecutable abi > abi/DistributionExecutable.json # --via-ir --optimize
