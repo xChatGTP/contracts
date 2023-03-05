@@ -21,7 +21,7 @@ contract HFunds is HandlerBase {
         uint256[] memory balances = new uint256[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            if (token != address(0) && token != NATIVE_TOKEN_ADDRESS) {
+            if (token != address(0) && token != NATIVE_TOKEN_ALT) {
                 // Update involved token
                 _updateToken(token);
             }
@@ -57,7 +57,7 @@ contract HFunds is HandlerBase {
             if (amount > 0) {
                 // ETH case
                 if (
-                    tokens[i] == address(0) || tokens[i] == NATIVE_TOKEN_ADDRESS
+                    tokens[i] == address(0) || tokens[i] == NATIVE_TOKEN_ALT
                 ) {
                     receiver.transfer(amount);
                 } else {

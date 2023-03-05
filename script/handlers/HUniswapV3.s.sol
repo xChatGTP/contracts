@@ -15,8 +15,7 @@ contract DeployHUniswapV3 is Script {
 
     vm.startBroadcast();
     
-    // new HUniswapV3(wNativeToken, swapRouter);
-    new HUniswapV3();
+    new HUniswapV3(wNativeToken, swapRouter);
 
     vm.stopBroadcast();
   }

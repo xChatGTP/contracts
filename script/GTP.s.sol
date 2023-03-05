@@ -13,15 +13,15 @@ contract DeployGTP is Script {
         DeployHUniswapV3 dhuniv3 = new DeployHUniswapV3();
     
         address wNativeToken = tokens.getWrappedNativeToken();
-        address swapRouter = dhuniv3.getSwapRouter();
+        // address swapRouter = dhuniv3.getSwapRouter();
 
         vm.startBroadcast();
         new GTP(
             address(1), // gateway
             address(1), // gasReceiver
             'MATIC', // native token symbol
-            wNativeToken, // native token
-            swapRouter // uniswap v3 router
+            wNativeToken // native token
+            // swapRouter // uniswap v3 router
         );
         vm.stopBroadcast();
     }

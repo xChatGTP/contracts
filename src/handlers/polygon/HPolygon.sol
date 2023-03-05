@@ -41,7 +41,7 @@ contract HPolygon is HandlerBase {
             _revertMsg("depositEther");
         }
 
-        emit PolygonBridged(user, NATIVE_TOKEN_ADDRESS, value);
+        emit PolygonBridged(user, NATIVE_TOKEN_ALT, value);
     }
 
     function depositERC20(address token, uint256 amount) external payable {

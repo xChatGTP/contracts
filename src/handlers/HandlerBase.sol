@@ -13,12 +13,7 @@ abstract contract HandlerBase is Storage, Config {
     using SafeERC20 for IERC20;
     using LibStack for bytes32[];
 
-    /// @dev Place NATIVE_TOKEN_ADDRESS as the first variable
-    ///      for delegate call storage loading.
-    address public NATIVE_TOKEN_ADDRESS; // = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /// @dev Placeholder for delegatecall
-    ISwapRouter public ROUTER; // = ISwapRouter(address(0));
+    address internal constant NATIVE_TOKEN_ALT = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     function postProcess() external payable virtual {
         revert('Invalid post process');
@@ -105,7 +100,7 @@ abstract contract HandlerBase is Storage, Config {
         }
 
         // ETH case
-        if (token == address(0) || token == NATIVE_TOKEN_ADDRESS) {
+        if (token == address(0) || token == NATIVE_TOKEN_ALT) {
             return address(this).balance;
         }
         // ERC20 token case
@@ -125,6 +120,6 @@ abstract contract HandlerBase is Storage, Config {
     }
 
     function _isNotNativeToken(address token) internal view returns (bool) {
-        return (token != address(0) && token != NATIVE_TOKEN_ADDRESS);
+        return (token != address(0) && token != NATIVE_TOKEN_ALT);
     }
 }

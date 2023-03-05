@@ -21,24 +21,27 @@ contract GTPTest is Test {
 	HUniswapV3 internal hUniswapV3;
 	HFunds internal hFunds;
 
+	address internal wNativeToken;
+	address internal swapRouter;
+
 	function setUp() public {
 		Tokens tokens = new Tokens();
 		DeployHUniswapV3 dhuniv3 = new DeployHUniswapV3();
     
-		address wNativeToken = tokens.getWrappedNativeToken();
-		address swapRouter = dhuniv3.getSwapRouter();
+		wNativeToken = tokens.getWrappedNativeToken();
+		swapRouter = dhuniv3.getSwapRouter();
 
 		gtp = new GTP(
 				address(1), // gateway
 				address(1), // gasReceiver
 				'MATIC', // native token symbol
-				wNativeToken, // native token
-				swapRouter // uniswap v3 router
+				wNativeToken // native token
+				// swapRouter // uniswap v3 router
 		);
 
 		IERC20(wNativeToken).approve(address(gtp), type(uint256).max);
 
-		hUniswapV3 = new HUniswapV3();
+		hUniswapV3 = new HUniswapV3(wNativeToken, swapRouter);
 		hFunds = new HFunds();
 
 		// Get Wrapped Token
@@ -79,6 +82,11 @@ contract GTPTest is Test {
 	}
 
 	function testSwapNative2Token() public {
+		console.log('matic bal (this)', address(this).balance);
+		console.log('matic bal (GTP)', address(gtp).balance);
+		console.log('usdc bal (this)', IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).balanceOf(address(this)));
+		console.log('usdc bal (GTP)', IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).balanceOf(address(gtp)));
+
 		address[] memory tos = new address[](2);
 		bytes32[] memory configs = new bytes32[](2);
 		bytes[] memory datas = new bytes[](2);
@@ -92,6 +100,11 @@ contract GTPTest is Test {
 		datas[1] = hex'8aa5b89b0000000000000000000000002791Bca1f2de4661ED88A30C99A7a9449Aa8417400000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000';
 
 		gtp.batchExec{ value: 1 ether }(tos, configs, datas);
+
+		console.log('matic bal (this)', address(this).balance);
+		console.log('matic bal (GTP)', address(gtp).balance);
+		console.log('usdc bal (this)', IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).balanceOf(address(this)));
+		console.log('usdc bal (GTP)', IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).balanceOf(address(gtp)));
 	}
 
 	fallback() external payable {}

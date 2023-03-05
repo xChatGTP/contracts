@@ -44,10 +44,9 @@ contract GTP is Storage, Config {
 		address gtp; // GTP contract deployed on this chain
 	}
 
-    /// @dev First two variables must be maintained in its slots for delegatecall
-    address private immutable NATIVE_TOKEN_ADDRESS; // 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+    address private constant NATIVE_TOKEN_ALT = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    ISwapRouter private immutable ROUTER;
+    address public owner;
 
 	// Mapping from our internal chain id to official chain
 	mapping (uint256 => SiblingChain) public siblingChains;
@@ -55,8 +54,6 @@ contract GTP is Storage, Config {
     IAxelarGasService public gasReceiver;
 
     string private NATIVE_TOKEN_SYMBOL;
-
-    address public owner;
 
     modifier onlyOwner() {
         require(msg.sender == owner, 'Only owner');
@@ -67,13 +64,11 @@ contract GTP is Storage, Config {
         address _gateway,
         address _gasReceiver,
         string memory _nativeTokenSymbol,
-        address _nativeTokenAddress,
-        address _router // Uniswap Router V3
+        address _nativeTokenAddress
     ) {
         // gasReceiver = IAxelarGasService(_gasReceiver);
-        NATIVE_TOKEN_ADDRESS = _nativeTokenAddress;
+        // wrappedTokenAddress = _nativeTokenAddress;
         NATIVE_TOKEN_SYMBOL = _nativeTokenSymbol;
-        ROUTER = ISwapRouter(_router);
         owner = msg.sender;
     }
 
