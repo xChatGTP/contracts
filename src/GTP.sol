@@ -16,6 +16,7 @@ import { LibStack } from './libs/LibStack.sol';
 import { LibParam } from './libs/LibParam.sol';
 import { BytesLib } from './libs/BytesLib.sol';
 import { ISwapRouter } from './handlers/uniswapv3/ISwapRouter.sol';
+import { IWrappedNativeToken } from './handlers/wrappednativetoken/IWrappedNativeToken.sol';
 
 contract GTP is AxelarExecutable, Storage, Config {
     using SafeERC20 for IERC20;
@@ -248,17 +249,34 @@ contract GTP is AxelarExecutable, Storage, Config {
 
         SiblingChain memory nextChain = siblingChains[chainIdDest];
 
-        // string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
-        // string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
-        string memory dstChain = 'avalanche';
-        string memory dstContractAddr = '0x1';
+        string memory dstChain = nextChain.chainName; // e.g. 'ethereum-2'
+        string memory dstContractAddr = Strings.toHexString(uint256(uint160(nextChain.gtp)), 20);
         
         // uint256 amount = 0.025 ether;
         // _trim(data, bridgeConfig, localStack, index);
 
-        // uint256 amountToBridge = uint256(localStack[0]); // peek
+        console.logBytes32(localStack[0]);
+        uint256 amountToBridge = uint256(localStack[0]); // peek
         // console.log(amountToBridge);
-        uint256 amountToBridge = 1 ether;
+        // uint256 amountToBridge = 1 ether;
+
+        // console.log(
+        //     'MATIC balance before deposit:',
+        //     address(this).balance
+        // );
+        // console.log(
+        //     'WMATIC balance before deposit:',
+        //     IERC20(0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889).balanceOf(address(this))
+        // );
+        IWrappedNativeToken(0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889).deposit{ value: amountToBridge }();
+        // console.log(
+        //     'MATIC balance after deposit:',
+        //     address(this).balance
+        // );
+        // console.log(
+        //     'WMATIC balance after deposit:',
+        //     IERC20(0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889).balanceOf(address(this))
+        // );
 
         // AVAX (Avalanche)
         // ETH (Ethereum)
@@ -279,17 +297,8 @@ contract GTP is AxelarExecutable, Storage, Config {
             msg.sender
         );
 
-        console.log("Approving tokens for gateway...", tokenAddress);
-
-        // Approve tokens
-        IERC20(tokenAddress).approve(address(gateway), amountToBridge);
-
-        console.log("Approved tokens for gateway!");
-
         // Initiate GMP
         gateway.callContractWithToken(dstChain, dstContractAddr, payload, NATIVE_TOKEN_SYMBOL, amountToBridge);
-    
-        console.log("called gateway.callContractWithToken");
     }
 
     /**

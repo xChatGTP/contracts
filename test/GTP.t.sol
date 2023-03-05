@@ -58,7 +58,12 @@ contract GTPTest is Test {
 		vm.prank(0x9883D5e7dC023A441A01Ef95aF406C69926a0AB6);
 		IERC20(0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa).transfer(
 			address(this),
-			100 ether
+			50 ether
+		);
+		vm.prank(0x9883D5e7dC023A441A01Ef95aF406C69926a0AB6);
+		IERC20(0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa).transfer(
+			address(gtp),
+			50 ether
 		);
 		IERC20(0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa).approve(
 			address(gtp),
