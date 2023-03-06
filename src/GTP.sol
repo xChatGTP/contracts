@@ -360,11 +360,11 @@ contract GTP is AxelarExecutable, Storage, Config {
         (user, tos, configs, datas) = abi.decode(payload, (address, address[], bytes32[], bytes[]));
 
         // tos[0].call(datas[0]);
-        IERC20(0xde3dB4FD7D7A5Cc7D8811b7BaFA4103FD90282f3).transfer(user, bridgedAmount);
+        // IERC20(0xde3dB4FD7D7A5Cc7D8811b7BaFA4103FD90282f3).transfer(user, bridgedAmount);
 
-        // if (tos.length > 1) {
-        //     _chainedExecs(user, bridgedAmount, tos, configs, datas);
-        // }
+        if (tos.length > 0) {
+            _chainedExecs(user, bridgedAmount, tos, configs, datas);
+        }
     }
 
     /**
